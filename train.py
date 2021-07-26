@@ -20,7 +20,7 @@ import models
 from plot import make_plots
 from loss_util import LossFunction, get_emd
 from process_util import remove_dupes, pair_dupes
-from graph_data import GraphDataset, ONE_HUNDRED_GEV
+from graph_data import GraphDataset
 
 plt.rcParams['figure.figsize'] = (4,4)
 plt.rcParams['figure.dpi'] = 120
@@ -252,8 +252,8 @@ if __name__ == "__main__":
             if "SymmetricDDEdgeNet" in args.model:
                 learn_emd = learn_emd[0]    # toss unecessary terms
 
-        ys.append(true_emd.cpu().numpy().squeeze()*ONE_HUNDRED_GEV)
-        preds.append(learn_emd.cpu().detach().numpy().squeeze()*ONE_HUNDRED_GEV)
+        ys.append(true_emd.cpu().numpy().squeeze())
+        preds.append(learn_emd.cpu().detach().numpy().squeeze())
     
     ys = np.concatenate(ys)   
     preds = np.concatenate(preds)
