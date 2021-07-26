@@ -13,8 +13,6 @@ from process_util import jet_particles, normalize
 from natsort import natsorted
 from sys import exit
 
-ONE_HUNDRED_GEV = 100.0
-
 class GraphDataset(Dataset):
     def __init__(self, root, transform=None, pre_transform=None, n_jets=1000,
                  n_events_merge=100, n_events=1000, lhco=False, lhco_back=False, R=1.0):
@@ -73,7 +71,7 @@ class GraphDataset(Dataset):
         for k, (i, j) in enumerate(jetpairs):    
             if k % (len(jetpairs) // 20) == 0:
                 print(f'Generated: {k}/{len(jetpairs)}')
-            emdval, G = ef.emd.emd(Js[i], Js[j], R=R, return_flow=True)
+            emdval, G = ef.emd.emd(Js[i], Js[j], R=self.R, return_flow=True)
             jetpair = np.concatenate([Js[i], Js[j]], axis=0)
             nparticles_i = len(Js[i])
             nparticles_j = len(Js[j])

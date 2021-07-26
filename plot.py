@@ -20,7 +20,7 @@ import math
 import tqdm
 from pathlib import Path
 from torch.utils.data import random_split
-from graph_data import GraphDataset, ONE_HUNDRED_GEV
+from graph_data import GraphDataset
 from torch_geometric.data import Data, DataLoader
 
 # personal code
@@ -176,8 +176,8 @@ if __name__ == "__main__":
             out = model(data)
             if model_fname == "SymmetricDDEdgeNet":
                 out = out[0]    # toss unecessary terms
-            ys.append(data.y.cpu().numpy().squeeze()*ONE_HUNDRED_GEV)
-            preds.append(out.cpu().detach().numpy().squeeze()*ONE_HUNDRED_GEV)
+            ys.append(data.y.cpu().numpy().squeeze())
+            preds.append(out.cpu().detach().numpy().squeeze())
         ys = np.concatenate(ys)   
         preds = np.concatenate(preds)   
 
