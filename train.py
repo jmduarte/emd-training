@@ -5,6 +5,7 @@ import math
 import tqdm
 import torch
 import random
+import inspect
 import logging
 import numpy as np
 import os.path as osp
@@ -111,8 +112,7 @@ if __name__ == "__main__":
     parser.add_argument("--input-dir", type=str, help="Input directory for datasets.", required=False,
                         default='/energyflowvol/datasets/')
     # model
-    parser.add_argument("--model", choices=['EdgeNet', 'DynamicEdgeNet','DeeperDynamicEdgeNet','DeeperDynamicEdgeNetPredictFlow',
-                                            'DeeperDynamicEdgeNetPredictEMDFromFlow','SymmetricDDEdgeNet'], 
+    parser.add_argument("--model", choices=[m[0] for m in inspect.getmembers(models, inspect.isclass) if m[1].__module__ == 'models'], 
                         help="Model name", required=False, default='DeeperDynamicEdgeNet')
     # loss
     parser.add_argument("--loss", choices=['symm_loss_1', 'symm_loss_2', 'mse', 'predict_flow'], help="loss function choice", required=True)
@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     # create model
     model_class = getattr(models, args.model)
-    input_dim = 4
+    input_dim = 3
     big_dim = 32
     bigger_dim = 128
     global_dim = 2
@@ -249,7 +249,7 @@ if __name__ == "__main__":
         else:
             true_emd = data.y
             learn_emd = model(data)
-            if args.model == "SymmetricDDEdgeNet":
+            if "SymmetricDDEdgeNet" in args.model:
                 learn_emd = learn_emd[0]    # toss unecessary terms
 
         ys.append(true_emd.cpu().numpy().squeeze()*ONE_HUNDRED_GEV)

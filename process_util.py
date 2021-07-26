@@ -61,6 +61,7 @@ def normalize(jet):
 
     # divide each particle pT by jet pT if we want relative jet pT
     jet[:, 0] /= jet_vecs.pt.to_numpy()
+    return jet
     
 def remove_dupes(data):
     """

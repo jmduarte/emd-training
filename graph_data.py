@@ -74,7 +74,7 @@ class GraphDataset(Dataset):
             if k % (len(jetpairs) // 20) == 0:
                 print(f'Generated: {k}/{len(jetpairs)}')
             emdval, G = ef.emd.emd(Js[i], Js[j], R=R, return_flow=True)
-            jetpair = np.concatenate([jiNorm, jjNorm], axis=0)
+            jetpair = np.concatenate([Js[i], Js[j]], axis=0)
             nparticles_i = len(Js[i])
             nparticles_j = len(Js[j])
             pairs = [[m, n] for (m, n) in itertools.product(range(0,nparticles_i),range(nparticles_i,nparticles_i+nparticles_j))]
@@ -97,6 +97,9 @@ class GraphDataset(Dataset):
                 torch.save(datas, osp.join(self.processed_dir, 'data_{}.pt'.format(k)))
                 datas=[]
             
+    def len(self):
+        return len(self.processed_file_names)
+
     def get(self, idx):
         data = torch.load(osp.join(self.processed_dir, self.processed_file_names[idx]))
         return data
