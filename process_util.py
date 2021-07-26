@@ -43,6 +43,9 @@ def jet_particles(raw_path, n_events, back, R):
     X = np.array(X,dtype='O')
     return X
 
+def dphi(phi1, phi2):
+    return (phi1 - phi2 + np.pi) % (2 * np.pi) - np.pi
+
 def normalize(jet):
     # convert into a coffea vector
     part_vecs = ak.zip({
@@ -57,7 +60,7 @@ def normalize(jet):
 
     # subtract the jet eta, phi from each particle to convert to normalized coordinates
     jet[:, 1] -= jet_vecs.eta.to_numpy()
-    jet[:, 2] -= jet_vecs.phi.to_numpy()
+    jet[:, 2] = dphi(jet[:, 2], jet_vecs.phi.to_numpy())
 
     # divide each particle pT by jet pT if we want relative jet pT
     jet[:, 0] /= jet_vecs.pt.to_numpy()
