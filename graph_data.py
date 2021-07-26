@@ -17,12 +17,13 @@ ONE_HUNDRED_GEV = 100.0
 
 class GraphDataset(Dataset):
     def __init__(self, root, transform=None, pre_transform=None, n_jets=1000,
-                 n_events_merge=100, n_events=1000, lhco=False, lhco_back=False):
+                 n_events_merge=100, n_events=1000, lhco=False, lhco_back=False, R=1.0):
         self.n_jets = n_jets
         self.n_events_merge = n_events_merge
         self.n_events = n_events
         self.lhco = lhco
         self.lhco_back = lhco_back
+        self.R = R
         super(GraphDataset, self).__init__(root, transform, pre_transform) 
 
 
@@ -49,12 +50,11 @@ class GraphDataset(Dataset):
 
     def process(self):
         Js = []
-        R = 0.4
         for raw_path in self.raw_paths:
             # load jet-particles dataset
             if self.lhco or self.lhco_back:
                 print("Loading LHCO Dataset")
-                X = jet_particles(raw_path, self.n_events, self.lhco_back)
+                X = jet_particles(raw_path, self.n_events, self.lhco_back, self.R)
             else:
                 print("Loading QG Dataset")
                 X, _ = ef.qg_jets.load(self.n_jets, pad=False, cache_dir=self.root+'/raw')

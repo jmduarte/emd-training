@@ -9,7 +9,7 @@ from pyjet import cluster,DTYPE_PTEPM
 
 ak.behavior.update(vector.behavior)
 
-def jet_particles(raw_path, n_events, back):
+def jet_particles(raw_path, n_events, back, R):
     if back:
         start = 1e6 - n_events
         df = pd.read_hdf(raw_path, start=start)
@@ -27,7 +27,7 @@ def jet_particles(raw_path, n_events, back):
                 pseudojets_input[j]['pT'] = all_events[i][j*3]
                 pseudojets_input[j]['eta'] = all_events[i][j*3+1]
                 pseudojets_input[j]['phi'] = all_events[i][j*3+2]
-        sequence = cluster(pseudojets_input, R=1.0, p=-1)
+        sequence = cluster(pseudojets_input, R=R, p=-1)
         jets = sequence.inclusive_jets()[:2] # leading 2 jets only
         if len(jets) < 2: continue
         for jet in jets: # for each jet get (px, py, pz, e)
