@@ -1,8 +1,13 @@
-import numpy as np
+import awkward as ak
 import pandas as pd
-import math
+import numpy as np
 import torch
+import math
+
+from coffea.nanoevents.methods import vector
 from pyjet import cluster,DTYPE_PTEPM
+
+ak.behavior.update(vector.behavior)
 
 def jet_particles(raw_path, n_events, back):
     if back:
@@ -37,6 +42,25 @@ def jet_particles(raw_path, n_events, back):
             X.append(particles)
     X = np.array(X,dtype='O')
     return X
+
+def normalize(jet):
+    # convert into a coffea vector
+    part_vecs = ak.zip({
+        "pt": jet[:, 0:1],
+        "eta": jet[:, 1:2],
+        "phi": jet[:, 2:3],
+        "mass": np.zeros_like(jet[:, 1:2])
+        }, with_name="PtEtaPhiMLorentzVector")
+
+    # sum over all the particles in each jet to get the jet 4-vector
+    jet_vecs = part_vecs.sum(axis=0)
+
+    # subtract the jet eta, phi from each particle to convert to normalized coordinates
+    jet[:, 1] -= jet_vecs.eta.to_numpy()
+    jet[:, 2] -= jet_vecs.phi.to_numpy()
+
+    # divide each particle pT by jet pT if we want relative jet pT
+    jet[:, 0] /= jet_vecs.pt.to_numpy()
     
 def remove_dupes(data):
     """
