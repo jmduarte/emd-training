@@ -118,7 +118,7 @@ if __name__ == '__main__':
     import argparse;
     parser = argparse.ArgumentParser()
     parser.add_argument('--plot-input', action='store_true', help='plot pt eta phi', default=False, required=False)
-    parser.add_argument('--plot-nn-eval', action='store_true', help='plot graphs for evaluating emd nn's', default=False, required=False)
+    parser.add_argument('--plot-nn-eval', action='store_true', help='plot graphs for evaluating emd nn', default=False, required=False)
     parser.add_argument('--model', choices=[m[0] for m in inspect.getmembers(models, inspect.isclass) if m[1].__module__ == 'models'], 
                         help='Model name', required=False, default='DeeperDynamicEdgeNet')
     parser.add_argument('--data-dir', type=str, help='location of dataset', default='~/.energyflow/datasets', required=True)
