@@ -1,17 +1,17 @@
-"""
+'''
 File: plot.py
 Plot either input distributions or graphs of emd-network output
 
 Example (visualize model output):
 python plot.py --plot-nn-eval \
-    --model "SymmetricDDEdgeNet" \
-    --data-dir "/energyflowvol/data/eval_lhco_data_150" \
-    --save-dir "/energyflowvol/figures/symmDD_lhco_model_new_loss_1k" \
-    --model-dir "/energyflowvol/models/symmDD_lhco_model_1k_new_loss" \
+    --model 'SymmetricDDEdgeNet' \
+    --data-dir '/energyflowvol/data/eval_lhco_data_150' \
+    --save-dir '/energyflowvol/figures/symmDD_lhco_model_new_loss_1k' \
+    --model-dir '/energyflowvol/models/symmDD_lhco_model_1k_new_loss' \
     --n-jets 150 \
     --n-events-merge 500 \
     --remove-dupes
-"""
+'''
 import matplotlib.pyplot as plt
 import os.path as osp
 import numpy as np
@@ -27,6 +27,8 @@ from torch_geometric.data import Data, DataLoader
 # personal code
 import models
 from process_util import remove_dupes
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 def make_hist(data, label, save_dir):
     plt.figure(figsize=(6,4.4))
@@ -53,7 +55,7 @@ def get_x_input(gdata):
     pt = torch.cat(pt)
     eta = torch.cat(eta)
     phi = torch.cat(phi)
-    return (pt, "pt"), (eta, "eta"), (phi, "phi")
+    return (pt, 'pt'), (eta, 'eta'), (phi, 'phi')
 
 def make_plots(preds, ys, model_fname, save_dir):
 
@@ -112,19 +114,19 @@ def make_plots(preds, ys, model_fname, save_dir):
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.png'))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import argparse;
     parser = argparse.ArgumentParser()
-    parser.add_argument("--plot-input", action='store_true', help="plot pt eta phi", default=False, required=False)
-    parser.add_argument("--plot-nn-eval", action='store_true', help="plot graphs for evaluating emd nn's", default=False, required=False)
-    parser.add_argument("--model", choices=[m[0] for m in inspect.getmembers(models, inspect.isclass) if m[1].__module__ == 'models'], 
-                        help="Model name", required=False, default='DeeperDynamicEdgeNet')
-    parser.add_argument("--data-dir", type=str, help="location of dataset", default="~/.energyflow/datasets", required=True)
-    parser.add_argument("--save-dir", type=str, help="where to save figures", default="/energyflowvol/figures", required=True)
-    parser.add_argument("--model-dir", type=str, help="path to folder with model", default="/energyflowvol/models2/", required=False)
-    parser.add_argument("--n-jets", type=int, help="number of jets", required=False, default=150)
-    parser.add_argument("--n-events-merge", type=int, help="number of events to merge", required=False, default=500)
-    parser.add_argument("--remove-dupes", action="store_true", help="remove dupes in data with different jet ordering", required=False)
+    parser.add_argument('--plot-input', action='store_true', help='plot pt eta phi', default=False, required=False)
+    parser.add_argument('--plot-nn-eval', action='store_true', help='plot graphs for evaluating emd nn's', default=False, required=False)
+    parser.add_argument('--model', choices=[m[0] for m in inspect.getmembers(models, inspect.isclass) if m[1].__module__ == 'models'], 
+                        help='Model name', required=False, default='DeeperDynamicEdgeNet')
+    parser.add_argument('--data-dir', type=str, help='location of dataset', default='~/.energyflow/datasets', required=True)
+    parser.add_argument('--save-dir', type=str, help='where to save figures', default='/energyflowvol/figures', required=True)
+    parser.add_argument('--model-dir', type=str, help='path to folder with model', default='/energyflowvol/models/', required=False)
+    parser.add_argument('--n-jets', type=int, help='number of jets', required=False, default=150)
+    parser.add_argument('--n-events-merge', type=int, help='number of events to merge', required=False, default=500)
+    parser.add_argument('--remove-dupes', action='store_true', help='remove dupes in data with different jet ordering', required=False)
     args = parser.parse_args()
 
     Path(args.save_dir).mkdir(exist_ok=True) # make a folder for these graphs
@@ -138,7 +140,7 @@ if __name__ == "__main__":
 
     if args.plot_nn_eval:
         if args.model_dir is None:
-            exit("No args.model-dir not specified")
+            exit('No args.model-dir not specified')
 
         # load all data into memory at once
         test_dataset = []
@@ -148,25 +150,22 @@ if __name__ == "__main__":
             test_dataset = remove_dupes(test_dataset)
 
         # load in model
-        input_dim = 4
+        input_dim = 3
         big_dim = 32
         bigger_dim = 128
         global_dim = 2
         output_dim = 1
         batch_size=100
-        device = 'cuda:0'
         model_class = getattr(models, args.model)
         model = model_class(input_dim=input_dim, big_dim=big_dim, bigger_dim=bigger_dim, 
                             global_dim=global_dim, output_dim=output_dim).to(device)
         model_fname = args.model
         modpath = osp.join(args.model_dir,model_fname+'.best.pth')
         try:
-            if torch.cuda.is_available():
-                model.load_state_dict(torch.load(modpath, map_location=torch.device('cuda')))
-            else:
-                model.load_state_dict(torch.load(modpath, map_location=torch.device('cpu')))
+            print(f'Loading model from: {modpath}')
+            model.load_state_dict(torch.load(modpath, map_location=device))
         except:
-            exit("No model")
+            exit('No model')
         
         # get test dataset
         test_loader = DataLoader(test_dataset, batch_size=batch_size, pin_memory=True, shuffle=False)
@@ -188,7 +187,7 @@ if __name__ == "__main__":
         for i, data in t:
             data.to(device)
             out = model(data)
-            if model_fname == "SymmetricDDEdgeNet":
+            if model_fname == 'SymmetricDDEdgeNet':
                 out = out[0]    # toss unecessary terms
             ys.append(data.y.cpu().numpy().squeeze())
             preds.append(out.cpu().detach().numpy().squeeze())
