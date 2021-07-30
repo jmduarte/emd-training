@@ -57,7 +57,7 @@ def get_x_input(gdata):
 def make_plots(preds, ys, model_fname, save_dir):
 
     # largest y-value rounded to nearest 100
-    max_range = round(np.max(ys),-2)
+    max_range = max(np.max(ys), np.max(preds))
     
     diffs = (preds-ys)
     rel_diffs = diffs[ys>0]/ys[ys>0]
