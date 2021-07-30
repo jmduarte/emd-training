@@ -76,7 +76,7 @@ def make_plots(preds, ys, model_fname, save_dir):
     fig.savefig(osp.join(save_dir,model_fname+'_EMD.png'))
 
     fig, ax = plt.subplots(figsize =(5, 5)) 
-    plt.hist(diffs, bins=np.linspace(-200, 200, 101))
+    plt.hist(diffs, bins=np.linspace(-0.1, 0.1, 101))
     ax.set_xlabel(f'EMD diff. [GeV], std: {"{:.3e}".format(np.std(diffs))}, mean: {"{:.3e}".format(np.mean(diffs))}')  
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.png'))
