@@ -127,10 +127,12 @@ if __name__ == '__main__':
     parser.add_argument('--n-jets', type=int, help='number of jets', required=False, default=150)
     parser.add_argument('--n-events-merge', type=int, help='number of events to merge', required=False, default=500)
     parser.add_argument('--remove-dupes', action='store_true', help='remove dupes in data with different jet ordering', required=False)
+    parser.add_argument("--lhco", action='store_true', help="Using lhco dataset (diff processing)", default=True, required=False)
+    parser.add_argument("--lhco-back", action='store_true', help="generate data from tail end of raw data", default=True, required=False)
     args = parser.parse_args()
 
     Path(args.save_dir).mkdir(exist_ok=True) # make a folder for these graphs
-    gdata = GraphDataset(root=args.data_dir, n_jets=args.n_jets, n_events_merge=args.n_events_merge)
+    gdata = GraphDataset(root=args.data_dir, n_jets=args.n_jets, n_events_merge=args.n_events_merge, lhco=args.lhco, lhco_back=lhco_back)
 
     if args.plot_input:
         x_input = get_x_input(gdata)
