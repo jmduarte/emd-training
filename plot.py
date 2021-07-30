@@ -189,7 +189,7 @@ if __name__ == '__main__':
         for i, data in t:
             data.to(device)
             out = model(data)
-            if model_fname == 'SymmetricDDEdgeNet':
+            if 'SymmetricDDEdgeNet' in model_fname:
                 out = out[0]    # toss unecessary terms
             ys.append(data.y.cpu().numpy().squeeze())
             preds.append(out.cpu().detach().numpy().squeeze())
