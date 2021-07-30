@@ -126,6 +126,7 @@ if __name__ == '__main__':
     parser.add_argument('--model-dir', type=str, help='path to folder with model', default='/energyflowvol/models/', required=False)
     parser.add_argument('--n-jets', type=int, help='number of jets', required=False, default=150)
     parser.add_argument('--n-events-merge', type=int, help='number of events to merge', required=False, default=500)
+    parser.add_argument("--batch-size", type=int, help="batch size", required=False, default=64)
     parser.add_argument('--remove-dupes', action='store_true', help='remove dupes in data with different jet ordering', required=False)
     parser.add_argument("--lhco", action='store_true', help="Using lhco dataset (diff processing)", default=True, required=False)
     parser.add_argument("--lhco-back", action='store_true', help="generate data from tail end of raw data", default=True, required=False)
@@ -157,7 +158,7 @@ if __name__ == '__main__':
         bigger_dim = 128
         global_dim = 2
         output_dim = 1
-        batch_size=100
+        batch_size=args.batch_size
         model_class = getattr(models, args.model)
         model = model_class(input_dim=input_dim, big_dim=big_dim, bigger_dim=bigger_dim, 
                             global_dim=global_dim, output_dim=output_dim).to(device)
