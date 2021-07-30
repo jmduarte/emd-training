@@ -132,7 +132,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     Path(args.save_dir).mkdir(exist_ok=True) # make a folder for these graphs
-    gdata = GraphDataset(root=args.data_dir, n_jets=args.n_jets, n_events_merge=args.n_events_merge, lhco=args.lhco, lhco_back=lhco_back)
+    gdata = GraphDataset(root=args.data_dir, n_jets=args.n_jets, n_events_merge=args.n_events_merge, lhco=args.lhco, lhco_back=args.lhco_back)
 
     if args.plot_input:
         x_input = get_x_input(gdata)
