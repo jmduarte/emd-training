@@ -153,15 +153,13 @@ if __name__ == '__main__':
             test_dataset = remove_dupes(test_dataset)
 
         # load in model
-        input_dim = 3
+        input_dim = 4
         big_dim = 32
         bigger_dim = 128
-        global_dim = 2
         output_dim = 1
         batch_size=args.batch_size
         model_class = getattr(models, args.model)
-        model = model_class(input_dim=input_dim, big_dim=big_dim, bigger_dim=bigger_dim, 
-                            global_dim=global_dim, output_dim=output_dim).to(device)
+        model = model_class(input_dim=input_dim, big_dim=big_dim, bigger_dim=bigger_dim, output_dim=output_dim).to(device)
         model_fname = args.model
         modpath = osp.join(args.model_dir,model_fname+'.best.pth')
         try:
