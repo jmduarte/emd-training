@@ -57,7 +57,7 @@ class GraphDataset(Dataset):
                 print("Loading QG Dataset")
                 X, _ = ef.qg_jets.load(self.n_jets, pad=False, cache_dir=self.root+'/raw')
             
-            # clean and store list of jets as particles (pt, eta, phi)
+            # store list of jets as particles (pt_rel, eta_rel, phi_rel)
             Js = []
             for jet_ctr, x in enumerate(X): 
                 x = normalize(x) # pt_rel, phi_rel, eta_rel
@@ -72,7 +72,16 @@ class GraphDataset(Dataset):
             if k % (len(jetpairs) // 20) == 0:
                 print(f'Generated: {k}/{len(jetpairs)}')
             emdval, G = ef.emd.emd(Js[i], Js[j], R=self.R, return_flow=True)
-            jetpair = np.concatenate([Js[i], Js[j]], axis=0)
+
+            # differentiate 2 jets by column of 1 vs -1
+            ji = np.zeros((Js[i].shape[0],Js[i].shape[1]+1))
+            jj = np.zeros((Js[j].shape[0],Js[j].shape[1]+1))
+            ji[:,:3] = Js[i].copy()
+            jj[:,:3] = Js[j].copy()
+            ji[:,3] = -1*np.ones((Js[i].shape[0]))
+            jj[:,3] = np.ones((Js[j].shape[0]))
+            jetpair = np.concatenate([ji, jj], axis=0)
+
             nparticles_i = len(Js[i])
             nparticles_j = len(Js[j])
             pairs = [[m, n] for (m, n) in itertools.product(range(0,nparticles_i),range(nparticles_i,nparticles_i+nparticles_j))]
