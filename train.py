@@ -115,7 +115,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", choices=[m[0] for m in inspect.getmembers(models, inspect.isclass) if m[1].__module__ == 'models'], 
                         help="Model name", required=False, default='DeeperDynamicEdgeNet')
     # loss
-    parser.add_argument("--loss", choices=['symm_loss_1', 'symm_loss_2', 'mse', 'predict_flow'], help="loss function choice", required=True)
+    parser.add_argument("--loss", choices=['symm_loss_1', 'symm_loss_2', 'mse', 'predict_flow', 'huber'], help="loss function choice", required=True)
     parser.add_argument("--lam1", type=float, help="lambda1 for predict_flow (emd term) or symm_loss_2", default=1, required=False)
     parser.add_argument("--lam2", type=float, help="lambda2 for predict flow (fij loss term)", default=100, required=False)
     # dataset
