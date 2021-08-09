@@ -28,6 +28,26 @@ plt.rcParams['font.family'] = 'serif'
 torch.manual_seed(0)
 np.random.seed(0)
 
+def forward_and_loss(model, data, loss_ftn_obj, device):
+    data = data.to(device)
+    batch_output = model(data)
+
+    if loss_ftn_obj.name == 'predict_flow':
+        batch_loss = loss_ftn_obj(data, batch_output)
+    elif loss_ftn_obj.name == 'symm_loss_1':
+        # loss = mse(y, pred) + mse(emd1, emd2)
+        batch_output, emd_1, emd_2 = batch_output
+        batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y, emd_1, emd_2)
+    elif loss_ftn_obj.name == 'symm_loss_2':
+        # loss = mse(y, pred) + lam * pred^2
+        batch_output, _, _ = batch_output
+        batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)
+    else:
+        if isinstance(batch_output, tuple):
+            batch_output = batch_output[0]
+        batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)    # mse
+    return batch_loss
+
 @torch.no_grad()
 def test(model, loader, total, batch_size, loss_ftn_obj):
     model.eval()
@@ -35,22 +55,7 @@ def test(model, loader, total, batch_size, loss_ftn_obj):
     sum_loss = 0.
     t = tqdm.tqdm(enumerate(loader),total=total/batch_size)
     for i,data in t:
-        data = data.to(device)
-        batch_output = model(data)
-
-        if loss_ftn_obj.name == 'predict_flow':
-            batch_loss = loss_ftn_obj(data, batch_output)
-        elif loss_ftn_obj.name == 'symm_loss_1':
-            # loss = mse(y, pred) + mse(emd1, emd2)
-            batch_output, emd_1, emd_2 = batch_output
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y, emd_1, emd_2)
-        elif loss_ftn_obj.name == 'symm_loss_2':
-            # loss = mse(y, pred) + lam * pred^2
-            batch_output, _, _ = batch_output
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)
-        else:
-            batch_output = model(data)
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)    # mse
+        batch_loss = forward_and_loss(model, data, loss_ftn_obj, device)
 
         batch_loss_item = batch_loss.item()
         sum_loss += batch_loss_item
@@ -65,29 +70,15 @@ def train(model, optimizer, loader, total, batch_size, loss_ftn_obj):
     sum_loss = 0.
     t = tqdm.tqdm(enumerate(loader),total=total/batch_size)
     for i,data in t:
-        data = data.to(device)
         optimizer.zero_grad()
-        batch_output = model(data)
-
-        if loss_ftn_obj.name == 'predict_flow':
-            batch_loss = loss_ftn_obj(data, batch_output)
-        elif loss_ftn_obj.name == 'symm_loss_1':
-            # loss = mse(y, pred) + mse(emd1, emd2)
-            batch_output, emd_1, emd_2 = batch_output
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y, emd_1, emd_2)
-        elif loss_ftn_obj.name == 'symm_loss_2':
-            # loss = mse(y, pred) + lam * pred^2
-            batch_output, _, _ = batch_output
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)
-        else:
-            batch_output = model(data)
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)    # mse
+        batch_loss = forward_and_loss(model, data, loss_ftn_obj, device)
 
         batch_loss.backward()
         batch_loss_item = batch_loss.item()
+        sum_loss += batch_loss_item
+
         t.set_description("loss = %.5f" % batch_loss_item)
         t.refresh() # to show immediately the update
-        sum_loss += batch_loss_item
         optimizer.step()
     
     return sum_loss/(i+1)
