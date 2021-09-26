@@ -1,10 +1,15 @@
-import numpy as np
+import awkward as ak
 import pandas as pd
-import math
+import numpy as np
 import torch
+import math
+
+from coffea.nanoevents.methods import vector
 from pyjet import cluster,DTYPE_PTEPM
 
-def jet_particles(raw_path, n_events, back):
+ak.behavior.update(vector.behavior)
+
+def jet_particles(raw_path, n_events, back, R):
     if back:
         start = 1e6 - n_events
         df = pd.read_hdf(raw_path, start=start)
@@ -22,7 +27,7 @@ def jet_particles(raw_path, n_events, back):
                 pseudojets_input[j]['pT'] = all_events[i][j*3]
                 pseudojets_input[j]['eta'] = all_events[i][j*3+1]
                 pseudojets_input[j]['phi'] = all_events[i][j*3+2]
-        sequence = cluster(pseudojets_input, R=1.0, p=-1)
+        sequence = cluster(pseudojets_input, R=R, p=-1)
         jets = sequence.inclusive_jets()[:2] # leading 2 jets only
         if len(jets) < 2: continue
         for jet in jets: # for each jet get (px, py, pz, e)
@@ -37,6 +42,29 @@ def jet_particles(raw_path, n_events, back):
             X.append(particles)
     X = np.array(X,dtype='O')
     return X
+
+def dphi(phi1, phi2):
+    return (phi1 - phi2 + np.pi) % (2 * np.pi) - np.pi
+
+def normalize(jet):
+    # convert into a coffea vector
+    part_vecs = ak.zip({
+        "pt": jet[:, 0:1],
+        "eta": jet[:, 1:2],
+        "phi": jet[:, 2:3],
+        "mass": np.zeros_like(jet[:, 1:2])
+        }, with_name="PtEtaPhiMLorentzVector")
+
+    # sum over all the particles in each jet to get the jet 4-vector
+    jet_vecs = part_vecs.sum(axis=0)
+
+    # subtract the jet eta, phi from each particle to convert to normalized coordinates
+    jet[:, 1] -= jet_vecs.eta.to_numpy()
+    jet[:, 2] = dphi(jet[:, 2], jet_vecs.phi.to_numpy())
+
+    # divide each particle pT by jet pT if we want relative jet pT
+    jet[:, 0] /= jet_vecs.pt.to_numpy()
+    return jet
     
 def remove_dupes(data):
     """

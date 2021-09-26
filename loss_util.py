@@ -22,6 +22,8 @@ class LossFunction:
     def __init__(self, lossname, lam1=1, lam2=100):
         if lossname == 'mse':
             loss = nn.MSELoss(reduction='mean')
+        elif lossname == 'huber':
+            loss = nn.HuberLoss(reduction='mean', delta=1.0)
         else:
             loss = getattr(self, lossname)
         self.loss_ftn = loss

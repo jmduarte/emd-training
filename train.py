@@ -5,6 +5,7 @@ import math
 import tqdm
 import torch
 import random
+import inspect
 import logging
 import numpy as np
 import os.path as osp
@@ -19,13 +20,33 @@ import models
 from plot import make_plots
 from loss_util import LossFunction, get_emd
 from process_util import remove_dupes, pair_dupes
-from graph_data import GraphDataset, ONE_HUNDRED_GEV
+from graph_data import GraphDataset
 
 plt.rcParams['figure.figsize'] = (4,4)
 plt.rcParams['figure.dpi'] = 120
 plt.rcParams['font.family'] = 'serif'
 torch.manual_seed(0)
 np.random.seed(0)
+
+def forward_and_loss(model, data, loss_ftn_obj, device):
+    data = data.to(device)
+    batch_output = model(data)
+
+    if loss_ftn_obj.name == 'predict_flow':
+        batch_loss = loss_ftn_obj(data, batch_output)
+    elif loss_ftn_obj.name == 'symm_loss_1':
+        # loss = mse(y, pred) + mse(emd1, emd2)
+        batch_output, emd_1, emd_2 = batch_output
+        batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y, emd_1, emd_2)
+    elif loss_ftn_obj.name == 'symm_loss_2':
+        # loss = mse(y, pred) + lam * pred^2
+        batch_output, _, _ = batch_output
+        batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)
+    else:
+        if isinstance(batch_output, tuple):
+            batch_output = batch_output[0]
+        batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)    # mse
+    return batch_loss
 
 @torch.no_grad()
 def test(model, loader, total, batch_size, loss_ftn_obj):
@@ -34,22 +55,7 @@ def test(model, loader, total, batch_size, loss_ftn_obj):
     sum_loss = 0.
     t = tqdm.tqdm(enumerate(loader),total=total/batch_size)
     for i,data in t:
-        data = data.to(device)
-        batch_output = model(data)
-
-        if loss_ftn_obj.name == 'predict_flow':
-            batch_loss = loss_ftn_obj(data, batch_output)
-        elif loss_ftn_obj.name == 'symm_loss_1':
-            # loss = mse(y, pred) + mse(emd1, emd2)
-            batch_output, emd_1, emd_2 = batch_output
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y, emd_1, emd_2)
-        elif loss_ftn_obj.name == 'symm_loss_2':
-            # loss = mse(y, pred) + lam * pred^2
-            batch_output, _, _ = batch_output
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)
-        else:
-            batch_output = model(data)
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)    # mse
+        batch_loss = forward_and_loss(model, data, loss_ftn_obj, device)
 
         batch_loss_item = batch_loss.item()
         sum_loss += batch_loss_item
@@ -64,29 +70,15 @@ def train(model, optimizer, loader, total, batch_size, loss_ftn_obj):
     sum_loss = 0.
     t = tqdm.tqdm(enumerate(loader),total=total/batch_size)
     for i,data in t:
-        data = data.to(device)
         optimizer.zero_grad()
-        batch_output = model(data)
-
-        if loss_ftn_obj.name == 'predict_flow':
-            batch_loss = loss_ftn_obj(data, batch_output)
-        elif loss_ftn_obj.name == 'symm_loss_1':
-            # loss = mse(y, pred) + mse(emd1, emd2)
-            batch_output, emd_1, emd_2 = batch_output
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y, emd_1, emd_2)
-        elif loss_ftn_obj.name == 'symm_loss_2':
-            # loss = mse(y, pred) + lam * pred^2
-            batch_output, _, _ = batch_output
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)
-        else:
-            batch_output = model(data)
-            batch_loss = loss_ftn_obj.loss_ftn(batch_output, data.y)    # mse
+        batch_loss = forward_and_loss(model, data, loss_ftn_obj, device)
 
         batch_loss.backward()
         batch_loss_item = batch_loss.item()
+        sum_loss += batch_loss_item
+
         t.set_description("loss = %.5f" % batch_loss_item)
         t.refresh() # to show immediately the update
-        sum_loss += batch_loss_item
         optimizer.step()
     
     return sum_loss/(i+1)
@@ -111,11 +103,10 @@ if __name__ == "__main__":
     parser.add_argument("--input-dir", type=str, help="Input directory for datasets.", required=False,
                         default='/energyflowvol/datasets/')
     # model
-    parser.add_argument("--model", choices=['EdgeNet', 'DynamicEdgeNet','DeeperDynamicEdgeNet','DeeperDynamicEdgeNetPredictFlow',
-                                            'DeeperDynamicEdgeNetPredictEMDFromFlow','SymmetricDDEdgeNet'], 
+    parser.add_argument("--model", choices=[m[0] for m in inspect.getmembers(models, inspect.isclass) if m[1].__module__ == 'models'], 
                         help="Model name", required=False, default='DeeperDynamicEdgeNet')
     # loss
-    parser.add_argument("--loss", choices=['symm_loss_1', 'symm_loss_2', 'mse', 'predict_flow'], help="loss function choice", required=True)
+    parser.add_argument("--loss", choices=['symm_loss_1', 'symm_loss_2', 'mse', 'predict_flow', 'huber'], help="loss function choice", required=True)
     parser.add_argument("--lam1", type=float, help="lambda1 for predict_flow (emd term) or symm_loss_2", default=1, required=False)
     parser.add_argument("--lam2", type=float, help="lambda2 for predict flow (fij loss term)", default=100, required=False)
     # dataset
@@ -146,15 +137,13 @@ if __name__ == "__main__":
     input_dim = 4
     big_dim = 32
     bigger_dim = 128
-    global_dim = 2
     output_dim = 1
     batch_size = args.batch_size
     lr = 0.001
     device = 'cuda:0'
     model_fname = args.model
     modpath = osp.join(args.output_dir,model_fname+'.best.pth')
-    model = model_class(input_dim=input_dim, big_dim=big_dim, bigger_dim=bigger_dim, 
-                        global_dim=global_dim, output_dim=output_dim).to(device)
+    model = model_class(input_dim=input_dim, big_dim=big_dim, bigger_dim=bigger_dim, output_dim=output_dim).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr = lr)
     try:
         if torch.cuda.is_available():
@@ -249,11 +238,11 @@ if __name__ == "__main__":
         else:
             true_emd = data.y
             learn_emd = model(data)
-            if args.model == "SymmetricDDEdgeNet":
+            if "SymmetricDDEdgeNet" in args.model:
                 learn_emd = learn_emd[0]    # toss unecessary terms
 
-        ys.append(true_emd.cpu().numpy().squeeze()*ONE_HUNDRED_GEV)
-        preds.append(learn_emd.cpu().detach().numpy().squeeze()*ONE_HUNDRED_GEV)
+        ys.append(true_emd.cpu().numpy().squeeze())
+        preds.append(learn_emd.cpu().detach().numpy().squeeze())
     
     ys = np.concatenate(ys)   
     preds = np.concatenate(preds)
