@@ -89,9 +89,9 @@ def make_plots(preds, ys, model_fname, save_dir):
     sigma_exp = int(sigma[sigma.find('e') + 1:])
     mu_co = mu[:mu.find('e')]
     sigma_co = sigma[:sigma.find('e')]
-    plt.text(x, y, f'$\mu={mu_co}\\times 10^{{{mu_exp}}}$'
+    plt.text(x, y, f'$\mu={mu_co}\\times 10^{{{mu_exp}}} [GeV]$'
                 '\n'
-                f'$\sigma={sigma_co}\\times 10^{{{sigma_exp}}}$')
+                f'$\sigma={sigma_co}\\times 10^{{{sigma_exp}}} [GeV]$')
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.png'))
 
