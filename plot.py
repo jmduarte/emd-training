@@ -113,20 +113,16 @@ def make_plots(preds, ys, model_fname, save_dir):
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_rel_diff.png'))
 
     fig, ax = plt.subplots(figsize =(5, 5)) 
-    ax.scatter
+    x_bins = np.linspace(0, max_range, 101)
+    y_bins = np.linspace(0, max_range, 101)
+    plt.hist2d(ys, preds, bins=[x_bins,y_bins], cmap=plt.cm.viridis)
     ax.set_xlabel('True EMD [GeV]')  
     ax.set_ylabel('Pred. EMD [GeV]')
+    cb = plt.colorbar()
+    cb.ax.get_yaxis().labelpad = 18
+    cb.ax.set_ylabel('Jets', rotation=270)
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.png'))
-
-    # fig, ax = plt.subplots(figsize =(5, 5)) 
-    # x_bins = np.linspace(0, max_range, 101)
-    # y_bins = np.linspace(0, max_range, 101)
-    # plt.hist2d(ys, preds, bins=[x_bins,y_bins])
-    # ax.set_xlabel('True EMD [GeV]')  
-    # ax.set_ylabel('Pred. EMD [GeV]')
-    # fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.pdf'))
-    # fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.png'))
 
 
 if __name__ == '__main__':
