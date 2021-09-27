@@ -89,9 +89,9 @@ def make_plots(preds, ys, model_fname, save_dir):
     sigma_exp = int(sigma[sigma.find('e') + 1:])
     mu_co = mu[:mu.find('e')]
     sigma_co = sigma[:sigma.find('e')]
-    plt.text(x, y, f'$\mu={mu_co}\times 10^{mu_exp}$'
+    plt.text(x, y, f'$\mu={mu_co}\\times 10^{{{mu_exp}}}$'
                 '\n'
-                f'$\sigma={sigma_co}\times 10^{sigma_exp}$')
+                f'$\sigma={sigma_co}\\times 10^{{{sigma_exp}}}$')
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.png'))
 
@@ -106,20 +106,27 @@ def make_plots(preds, ys, model_fname, save_dir):
     sigma_exp = int(sigma[sigma.find('e') + 1:])
     mu_co = mu[:mu.find('e')]
     sigma_co = sigma[:sigma.find('e')]
-    plt.text(x, y, f'$\mu={mu_co}\times 10^{mu_exp}$'
+    plt.text(x, y, f'$\mu={mu_co}\\times 10^{{{mu_exp}}}$'
                 '\n'
-                f'$\sigma={sigma_co}\times 10^{sigma_exp}$')
+                f'$\sigma={sigma_co}\\times 10^{{{sigma_exp}}}$')
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_rel_diff.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_rel_diff.png'))
 
     fig, ax = plt.subplots(figsize =(5, 5)) 
-    x_bins = np.linspace(0, max_range, 101)
-    y_bins = np.linspace(0, max_range, 101)
-    plt.hist2d(ys, preds, bins=[x_bins,y_bins])
+    ax.scatter
     ax.set_xlabel('True EMD [GeV]')  
     ax.set_ylabel('Pred. EMD [GeV]')
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.png'))
+
+    # fig, ax = plt.subplots(figsize =(5, 5)) 
+    # x_bins = np.linspace(0, max_range, 101)
+    # y_bins = np.linspace(0, max_range, 101)
+    # plt.hist2d(ys, preds, bins=[x_bins,y_bins])
+    # ax.set_xlabel('True EMD [GeV]')  
+    # ax.set_ylabel('Pred. EMD [GeV]')
+    # fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.pdf'))
+    # fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.png'))
 
 
 if __name__ == '__main__':
