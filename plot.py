@@ -70,6 +70,7 @@ def make_plots(preds, ys, model_fname, save_dir):
     plt.rcParams['figure.dpi'] = 120
     plt.rcParams['font.family'] = 'serif'
 
+    # overlaying hists
     fig, ax = plt.subplots(figsize =(5, 5)) 
     plt.hist(ys, bins=np.linspace(0, max_range , 101),label='True', alpha=0.5)
     plt.hist(preds, bins=np.linspace(0, max_range, 101),label = 'Pred.', alpha=0.5)
@@ -78,9 +79,11 @@ def make_plots(preds, ys, model_fname, save_dir):
     fig.savefig(osp.join(save_dir,model_fname+'_EMD.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD.png'))
 
+    # diff plot
     fig, ax = plt.subplots(figsize =(5, 5)) 
     hts, bins, _ = plt.hist(diffs, bins=np.linspace(-0.1, 0.1, 101))
     ax.set_xlabel(f'EMD diff. [GeV]')
+    ax.set_ylabel(f'Jet pairs')
     x = max(bins) * 0.3
     y = max(hts) * 0.8
     mu = np.format_float_scientific(np.mean(diffs), precision=2)
@@ -95,9 +98,11 @@ def make_plots(preds, ys, model_fname, save_dir):
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.png'))
 
+    # rel diff
     fig, ax = plt.subplots(figsize =(5, 5)) 
     hts, bins, _ = plt.hist(rel_diffs, bins=np.linspace(-1, 1, 101))
     ax.set_xlabel(f'EMD rel. diff.') 
+    ax.set_ylabel(f'Jet pairs')
     x = max(bins) * 0.3
     y = max(hts) * 0.8
     mu = np.format_float_scientific(np.mean(diffs), precision=2)
@@ -112,6 +117,7 @@ def make_plots(preds, ys, model_fname, save_dir):
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_rel_diff.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_rel_diff.png'))
 
+    # corr plot
     fig, ax = plt.subplots(figsize =(5, 5)) 
     x_bins = np.linspace(0, max_range, 101)
     y_bins = np.linspace(0, max_range, 101)
@@ -120,7 +126,7 @@ def make_plots(preds, ys, model_fname, save_dir):
     ax.set_ylabel('Pred. EMD [GeV]')
     cb = plt.colorbar()
     cb.ax.get_yaxis().labelpad = 18
-    cb.ax.set_ylabel('Jets', rotation=270)
+    cb.ax.set_ylabel('Jet pairs', rotation=270)
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.png'))
 
