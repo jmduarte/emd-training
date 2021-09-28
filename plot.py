@@ -83,11 +83,15 @@ def make_plots(preds, ys, model_fname, save_dir):
     ax.set_xlabel(f'EMD diff. [GeV]')
     x = max(bins) * 0.3
     y = max(hts) * 0.8
-    mu = np.format_float_scientific(np.mean(diffs), precision=3)
-    sigma = np.format_float_scientific(np.std(diffs), precision=3)
-    plt.text(x, y, f'$\mu={mu}$'
+    mu = np.format_float_scientific(np.mean(diffs), precision=2)
+    sigma = np.format_float_scientific(np.std(diffs), precision=2)
+    mu_exp = int(mu[mu.find('e') + 1:])
+    sigma_exp = int(sigma[sigma.find('e') + 1:])
+    mu_co = mu[:mu.find('e')]
+    sigma_co = sigma[:sigma.find('e')]
+    plt.text(x, y, f'$\mu={mu_co}\\times 10^{{{mu_exp}}} [GeV]$'
                 '\n'
-                f'$\sigma={sigma}$')
+                f'$\sigma={sigma_co}\\times 10^{{{sigma_exp}}} [GeV]$')
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_diff.png'))
 
@@ -96,20 +100,27 @@ def make_plots(preds, ys, model_fname, save_dir):
     ax.set_xlabel(f'EMD rel. diff.') 
     x = max(bins) * 0.3
     y = max(hts) * 0.8
-    mu = np.format_float_scientific(np.mean(rel_diffs), precision=3)
-    sigma = np.format_float_scientific(np.std(rel_diffs), precision=3)
-    plt.text(x, y, f'$\mu={mu}$'
+    mu = np.format_float_scientific(np.mean(diffs), precision=2)
+    sigma = np.format_float_scientific(np.std(diffs), precision=2)
+    mu_exp = int(mu[mu.find('e') + 1:])
+    sigma_exp = int(sigma[sigma.find('e') + 1:])
+    mu_co = mu[:mu.find('e')]
+    sigma_co = sigma[:sigma.find('e')]
+    plt.text(x, y, f'$\mu={mu_co}\\times 10^{{{mu_exp}}}$'
                 '\n'
-                f'$\sigma={sigma}$')
+                f'$\sigma={sigma_co}\\times 10^{{{sigma_exp}}}$')
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_rel_diff.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_rel_diff.png'))
 
     fig, ax = plt.subplots(figsize =(5, 5)) 
     x_bins = np.linspace(0, max_range, 101)
     y_bins = np.linspace(0, max_range, 101)
-    plt.hist2d(ys, preds, bins=[x_bins,y_bins])
+    plt.hist2d(ys, preds, bins=[x_bins,y_bins], cmap=plt.cm.viridis)
     ax.set_xlabel('True EMD [GeV]')  
     ax.set_ylabel('Pred. EMD [GeV]')
+    cb = plt.colorbar()
+    cb.ax.get_yaxis().labelpad = 18
+    cb.ax.set_ylabel('Jets', rotation=270)
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.pdf'))
     fig.savefig(osp.join(save_dir,model_fname+'_EMD_corr.png'))
 
